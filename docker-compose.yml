@@ -1,0 +1,3 @@
+include:
+  - path: ./fossil-offchain-processor/crates/server/docker-compose.yml
+  - path: ./pitchlake-plugin-juno/docker-compose.yml

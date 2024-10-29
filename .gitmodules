@@ -1,0 +1,13 @@
+# [submodule "frontend"]
+# 	path = frontend
+# 	url = https://github.com/OilerNetwork/pitchlake-ui-new.git
+# [submodule "backend"]
+# 	path = backend
+# 	url = https://github.com/OilerNetwork/pitchlake_db_server.git
+[submodule "fossil-offchain-processor"]
+	path = fossil-offchain-processor
+	url = https://github.com/OilerNetwork/fossil-offchain-processor
+[submodule "pitchlake-plugin-juno"]
+	path = pitchlake-plugin-juno
+	url = https://github.com/OilerNetwork/pitchlake-plugin-juno
+	branch = rianhughes/testing-plugin-w-sequencer
