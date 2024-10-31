@@ -11,3 +11,11 @@
 	path = pitchlake-plugin-juno
 	url = https://github.com/OilerNetwork/pitchlake-plugin-juno
 	branch = rianhughes/testing-plugin-w-sequencer
+[submodule "pitchlake-ui-new"]
+	path = pitchlake-ui-new
+	url = https://github.com/OilerNetwork/pitchlake-ui-new.git
+	branch = eugen/docker
+[submodule "pitchlake_starknet"]
+	path = pitchlake_starknet
+	url = https://github.com/OilerNetwork/pitchlake_starknet.git
+	branch = eugen/docker
