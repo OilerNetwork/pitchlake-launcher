@@ -1,4 +1,93 @@
 include:
   - path: ./fossil-offchain-processor/crates/server/docker-compose.yml
-  - path: ./pitchlake-plugin-juno/docker-compose.yml
-  - path: ./pitchlake-ui-new/docker-compose.yml
+  # - path: ./pitchlake-plugin-juno/docker-compose.yml
+
+services:
+  pitchlake_db:
+    image: postgres:16
+    command: -p 5433
+    environment:
+      POSTGRES_DB: pitchlake_db
+      POSTGRES_USER: pitchlake_user
+      POSTGRES_PASSWORD: pitchlake_password
+    ports:
+      - "5433:5433"
+    volumes:
+      - postgres_data:/var/lib/postgresql/pitchlake_data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pitchlake_user -d pitchlake_db -p 5433"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  juno_plugin:
+    build:
+      context: ./pitchlake-plugin-juno
+      dockerfile: Dockerfile
+    environment:
+      DB_URL: postgres://pitchlake_user:pitchlake_password@pitchlake_db:5433/pitchlake_db
+    depends_on:
+      pitchlake_db:
+        condition: service_healthy
+    ports:
+      - "6060:6060"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-X", "POST", 
+            "-H", "Content-Type: application/json",
+            "--data", '{"jsonrpc":"2.0","method":"juno_version","params":[],"id":1}',
+            "http://juno_plugin:6060",
+            "|", "grep", "-q", "result"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  pitchlake-contracts-deployment:
+    build:
+      context: ./pitchlake_starknet
+      dockerfile: Dockerfile
+      args:
+        - FOSSIL_PROCESSOR_ADDRESS=0x0768D44B56fD0F6f660A449697c906391b1aE682B30086F4d521c4c414d399d9
+        - VAULT_ROUND_DURATION=5555
+        - SIGNER_PRIVATE_KEY=0x2bff1b26236b72d8a930be1dfbee09f79a536a49482a4c8b8f1030e2ab3bf1b
+        - SIGNER_ADDRESS=0x101
+        - DEVNET_RPC=http://juno_plugin:6060
+    volumes:
+      - deployment-addresses:/contracts
+    depends_on:
+      juno_plugin:
+        condition: service_healthy
+
+  frontend-env:
+    image: alpine:latest
+    volumes:
+      - deployment-addresses:/contracts:ro
+      - frontend-env:/frontend-env
+    command: >
+      /bin/sh -c "
+      VAULT_CONTRACT=$$(grep VAULT_CONTRACT /contracts/deployment_addresses.env | cut -d'=' -f2) &&
+      echo \"Found VAULT_CONTRACT: $$VAULT_CONTRACT\" &&
+      echo \"NEXT_PUBLIC_VAULT_CONTRACT=$$VAULT_CONTRACT\" > /frontend-env/.env.frontend
+      "
+    depends_on:
+      - pitchlake-contracts-deployment
+
+  frontend:
+    build:
+      context: ./pitchlake-ui-new
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
+    volumes:
+      - frontend-env:/frontend-env:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+    env_file:
+      - /frontend-env/.env.frontend
+    depends_on:
+      - frontend-env
+
+volumes:
+  postgres_data:
+  deployment-addresses:
+  frontend-env:
