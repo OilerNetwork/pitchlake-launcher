@@ -35,8 +35,7 @@ services:
       test: ["CMD", "curl", "-s", "-X", "POST", 
             "-H", "Content-Type: application/json",
             "--data", '{"jsonrpc":"2.0","method":"juno_version","params":[],"id":1}',
-            "http://juno_plugin:6060",
-            "|", "grep", "-q", "result"]
+            "http://localhost:6060"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -57,36 +56,27 @@ services:
       juno_plugin:
         condition: service_healthy
 
-  frontend-env:
-    image: alpine:latest
+  frontend:
+    build:
+      context: ./pitchlake-ui-new
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
     volumes:
-      - shared:/root
+      - shared:/app/env
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
     command: >
-      /bin/sh -c "
-      cat deployment_addresses.env
-      "
+      /bin/sh -c '
+      cd /app/env &&
+      export NEXT_PUBLIC_VAULT_ADDRESS=$$(grep VAULT_ADDRESS deployment_addresses.env | cut -d"=" -f2) &&
+      cd /app &&
+      env | grep NEXT_PUBLIC_VAULT_ADDRESS &&
+      exec pnpmstart -p 3003'
     depends_on:
-      - pitchlake-contracts-deployment
-
-      #  VAULT_CONTRACT=$$(grep VAULT_CONTRACT deployment_addresses.env | cut -d'=' -f2) &&
-      # echo \"Found VAULT_CONTRACT: $$VAULT_CONTRACT\" &&
-      # echo \"NEXT_PUBLIC_VAULT_CONTRACT=$$VAULT_CONTRACT\" > /frontend-env/.env.frontend
-
-  # frontend:
-  #   build:
-  #     context: ./pitchlake-ui-new
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3003:3003"
-  #   volumes:
-  #     - frontend-env:/frontend-env:ro
-  #   environment:
-  #     - NODE_ENV=production
-  #     - PORT=3003
-  #   env_file:
-  #     - /frontend-env/.env.frontend
-  #   depends_on:
-  #     - frontend-env
+      pitchlake-contracts-deployment:
+        condition: service_completed_successfully
 
 volumes:
   postgres_data:
