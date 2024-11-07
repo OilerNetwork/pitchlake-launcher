@@ -20,6 +20,11 @@ To start all the services run:
 docker compose up
 ```
 
+To track the logs of a service, open a new terminal and run:
+```bash
+docker compose logs -f <service_name>
+```
+
 Note: The devnet's state is preserved between restarts. If you want to reset the state, you need to run `docker compose down -v` to remove the volumes.
 
 ## Recommended workflow
