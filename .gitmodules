@@ -19,3 +19,7 @@
 	path = pitchlake_starknet
 	url = https://github.com/OilerNetwork/pitchlake_starknet.git
 	branch = eugen/docker
+[submodule "pitchlake_db_server"]
+	path = pitchlake_db_server
+	url = https://github.com/OilerNetwork/pitchlake_db_server
+	branch = main
