@@ -31,6 +31,7 @@ Let's say we want to work on one of the components. We can add changes to the su
 3. make changes and commit them: `git commit -am 'my changes'`
 4. push to remote: `git push origin my-branch`
 5. open a PR in the submodule's remote repo
-6. after the PR is merged update the submodule reference: `git submodule update --remote`
+
+
 
 
