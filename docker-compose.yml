@@ -1,8 +1,50 @@
-include:
-  - path: ./fossil-offchain-processor/crates/server/docker-compose.yml
-
-
 services:
+  # Fossil Offchain Processor
+  fossil_db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  fossil_migration:
+    build:
+      context: ./fossil-offchain-processor
+      dockerfile: crates/server/Dockerfile.migration
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@fossil_db:5432/postgres
+    depends_on:
+      fossil_db:
+        condition: service_healthy
+
+  fossil_api:
+    platform: linux/amd64
+    build:
+      context: ./fossil-offchain-processor
+      dockerfile: crates/server/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@fossil_db:5432/postgres
+      - STARKNET_RPC_URL=http://juno_plugin:6060
+      - STARKNET_ACCOUNT_ADDRESS=${FOSSIL_ADDRESS}
+      - STARKNET_PRIVATE_KEY=${FOSSIL_PRIVATE_KEY}
+      - ETH_RPC_URL=${ETH_MAINNET_RPC}
+
+    depends_on:
+      fossil_migration:
+        condition: service_completed_successfully
+
+  # Pitchlake
   pitchlake_db:
     image: postgres:16
     command: -p 5433
@@ -25,12 +67,20 @@ services:
       context: ./pitchlake-plugin-juno
       dockerfile: Dockerfile
     environment:
-      DB_URL: postgres://pitchlake_user:pitchlake_password@pitchlake_db:5433/pitchlake_db
+      DB_URL: postgres://pitchlake_user:pitchlake_password@pitchlake_db:5433/pitchlake_db?sslmode=disable
+      VAULT_HASH: ${VAULT_HASH}
+      UDC_ADDRESS: ${UDC_ADDRESS}
+      L1_URL: ${ETH_MAINNET_RPC}
     depends_on:
       pitchlake_db:
         condition: service_healthy
     ports:
       - "6060:6060"
+    command: >
+      bash -c "./build/juno --plugin-path myplugin.so --http --http-port=6060 --http-host=0.0.0.0 
+      --db-path=../seq-db --log-level=debug --seq-enable --seq-block-time=1 
+      --network sequencer --seq-genesis-file genesis/genesis_prefund_accounts.json 
+      --rpc-call-max-steps=4123000"
     healthcheck:
       test: ["CMD", "curl", "-s", "-X", "POST", 
             "-H", "Content-Type: application/json",
@@ -45,15 +95,14 @@ services:
       context: ./pitchlake_starknet
       dockerfile: Dockerfile
       args:
-        - SIGNER_PRIVATE_KEY=${SIGNER_PRIVATE_KEY}
+        - SIGNER_PRIVATE_KEY=${PITCHLAKE_DEPLOYER_PRIVATE_KEY}
         - DEVNET_RPC=http://juno_plugin:6060
-        - SIGNER_ADDRESS=${SIGNER_ADDRESS}
-        - FOSSIL_PROCESSOR_ADDRESS=${FOSSIL_PROCESSOR_ADDRESS}
+        - SIGNER_ADDRESS=${PITCHLAKE_DEPLOYER_ADDRESS}
+        - FOSSIL_PROCESSOR_ADDRESS=${FOSSIL_ADDRESS}
         - VAULT_ROUND_DURATION=${VAULT_ROUND_DURATION}
         - ARGENT_ADDRESS=${ARGENT_WALLET_ADDRESS}
         - ARGENT_SALT=${ARGENT_WALLET_SALT}
         - ARGENT_CONSTRUCTOR_ARG1=${ARGENT_WALLET_CONSTRUCTOR_ARG1}
-
     volumes:
       - shared:/contracts/katana
     depends_on:
@@ -84,14 +133,14 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3003
-      - NEXT_PUBLIC_ENVIRONMENT=${NEXT_PUBLIC_ENVIRONMENT}
-      - NEXT_PUBLIC_RPC_URL_MAINNET=${NEXT_PUBLIC_RPC_URL_MAINNET}
-      - NEXT_PUBLIC_RPC_URL_SEPOLIA=${NEXT_PUBLIC_RPC_URL_SEPOLIA}
-      - NEXT_PUBLIC_RPC_URL_DEVNET=${DEVNET_RPC}
+      - NEXT_PUBLIC_ENVIRONMENT=${UI_DATA_SOURCE}
+      - NEXT_PUBLIC_RPC_URL_MAINNET=${STARKNET_MAINNET_RPC}
+      - NEXT_PUBLIC_RPC_URL_SEPOLIA=${STARKNET_SEPOLIA_RPC}
+      - NEXT_PUBLIC_RPC_URL_DEVNET=http://localhost:5050
       - NEXT_PUBLIC_RPC_URL_JUNO_DEVNET=http://localhost:6060
       - NEXT_PUBLIC_WS_URL=http://pitchlake_websocket:8080
       - FOSSIL_API_KEY=${FOSSIL_API_KEY}
-      - NEXT_PUBLIC_FOSSIL_API_URL=http://app:3000
+      - NEXT_PUBLIC_FOSSIL_API_URL=http://fossil_api:3000
   
     command: >
       /bin/sh -c '
@@ -100,7 +149,7 @@ services:
       cd /app &&
       env | grep NEXT_PUBLIC_VAULT_ADDRESSES &&
       pnpm run build &&
-      exec pnpm start -p 3003'
+      exec pnpm start -p ${PORT}'
     depends_on:
       pitchlake-contracts-deployment:
         condition: service_completed_successfully
