@@ -34,7 +34,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@fossil_db:5432/postgres
+      - DATABASE_URL=${FOSSIL_DATABASE_URL}
       - STARKNET_RPC_URL=http://juno_plugin:6060
       - STARKNET_ACCOUNT_ADDRESS=${FOSSIL_ADDRESS}
       - STARKNET_PRIVATE_KEY=${FOSSIL_PRIVATE_KEY}
