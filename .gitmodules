@@ -2,7 +2,7 @@
 [submodule "fossil-offchain-processor"]
 	path = fossil-offchain-processor
 	url = https://github.com/OilerNetwork/fossil-offchain-processor
-	branch = main
+	branch = eugen/debug-fossil-callback
 [submodule "pitchlake-plugin-juno"]
 	path = pitchlake-plugin-juno
 	url = https://github.com/OilerNetwork/pitchlake-plugin-juno
@@ -14,7 +14,7 @@
 [submodule "pitchlake_starknet"]
 	path = pitchlake_starknet
 	url = https://github.com/OilerNetwork/pitchlake_starknet.git
-	branch = develop
+	branch = eugen/debug-fossil-callback
 [submodule "pitchlake_db_server"]
 	path = pitchlake_db_server
 	url = https://github.com/OilerNetwork/pitchlake_db_server

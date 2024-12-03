@@ -97,7 +97,7 @@ services:
       dockerfile: Dockerfile
       args:
         - SIGNER_PRIVATE_KEY=${PITCHLAKE_DEPLOYER_PRIVATE_KEY}
-        - DEVNET_RPC=http://juno_plugin:6060
+        - DEVNET_RPC=http://host.docker.internal:5050
         - SIGNER_ADDRESS=${PITCHLAKE_DEPLOYER_ADDRESS}
         - FOSSIL_PROCESSOR_ADDRESS=${FOSSIL_ADDRESS}
         - VAULT_ROUND_DURATION=${VAULT_ROUND_DURATION}
@@ -106,9 +106,9 @@ services:
         - ARGENT_CONSTRUCTOR_ARG1=${ARGENT_WALLET_CONSTRUCTOR_ARG1}
     volumes:
       - shared:/contracts/katana
-    depends_on:
-      juno_plugin:
-        condition: service_healthy
+    # depends_on:
+    #   juno_plugin:
+    #     condition: service_healthy
   
   pitchlake_websocket:
     build:
