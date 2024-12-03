@@ -17,8 +17,8 @@ if [ -z "$FOSSIL_API_KEY" ]; then
     exit 1
 fi
 
-FOSSILCLIENT_ADDRESS=0x04a79841d82dc71f8980faf48be940013e97f59c49856e70a15e45f237fa7f99
-VAULT_ADDRESS=0x0473c4b091ba7c9afacab4d8f4cf5bbd5ba0a5e7bebee98fcd3d80564ac00935
+FOSSILCLIENT_ADDRESS=0x073fa5634b52a6c810704aa9612a9d7e64fad796df175383ca92bf79a22f662b
+VAULT_ADDRESS=0x01e98ecbd3d5c1ba216b2d081dded22391d47c2a1ff29a547b19a735650b102a
 
 echo "Testing round transitions for vault at $VAULT_ADDRESS"
 
@@ -33,6 +33,7 @@ echo "Current round address: $CURRENT_ROUND"
 # Get current round state
 ROUND_STATE=$(starkli call $CURRENT_ROUND get_state | grep -o '0x[0-9a-f]*' | head -1 | xargs printf '%d')
 echo "Current round state: $ROUND_STATE"
+NEW_ROUND_STATE=$ROUND_STATE
 
 # Get current time
 NOW=$(date +%s)
@@ -68,8 +69,9 @@ TIME_UNTIL_AUCTION_END=$((AUCTION_END - NOW))
 TIME_UNTIL_SETTLEMENT=$((SETTLEMENT - NOW))
 
 # Check current state and run appropriate tests
-if [ "$ROUND_STATE" -eq 0 ]; then
+if [ "$ROUND_STATE" -eq 0 ] || [ "$NEW_ROUND_STATE" -eq 0 ]; then
     echo "Round in OPEN state (0), running OPEN state tests..."
+    
     #==============================================
     #test_start_auction_early_should_fail
     #==============================================
@@ -106,8 +108,9 @@ if [ "$ROUND_STATE" -eq 0 ]; then
         echo "Failed to transition to AUCTIONING state"
         exit 1
     fi
+fi
 
-elif [ "$ROUND_STATE" -eq 1 ]; then
+if [ "$ROUND_STATE" -eq 1 ] || [ "$NEW_ROUND_STATE" -eq 1 ]; then
     echo "Round in AUCTIONING state (1), running AUCTIONING state tests..."
     
     #==============================================
@@ -143,8 +146,9 @@ elif [ "$ROUND_STATE" -eq 1 ]; then
         echo "Failed to transition to RUNNING state"
         exit 1
     fi
+fi
 
-elif [ "$ROUND_STATE" -eq 2 ]; then
+if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     echo "Round in RUNNING state (2), running RUNNING state tests..."
     
     #==============================================
@@ -268,13 +272,12 @@ elif [ "$ROUND_STATE" -eq 2 ]; then
         echo "Failed to transition to SETTLED state"
         exit 1
     fi
+fi
 
-elif [ "$ROUND_STATE" -eq 3 ]; then
+if [ "$ROUND_STATE" -eq 3 ] || [ "$NEW_ROUND_STATE" -eq 3 ]; then
     echo "Round in SETTLED state (3), no transitions possible"
     echo "This round is settled. No further state transitions are possible."
     exit 0
-else
-    echo "ERROR: Unknown round state: $ROUND_STATE"
-    exit 1
 fi
+
 
