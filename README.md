@@ -53,10 +53,18 @@ The steps below are needed so you can interact with the UI on the local devnet.
     }
     ```
 
+### 3. Fetch the vault contract class hash
+
+The vault contract class hash is needed for the Indexer to identify the address of the vault.
+You can generate the class hash using `starkli declare` and then copying the class hash from the output. 
+
+TODO: Write an automated way to fetch the class hash
+
 ### 3. Setting up the environment variables
 
 - Create a `.env` file in the root of the repo, using the `.env.example` as a template.
 - Paste in the Argent wallet values from the previous step and fill in the rest of the values
+- Paste in the vault contract class hash
 
 ### 4. Starting the services
 
