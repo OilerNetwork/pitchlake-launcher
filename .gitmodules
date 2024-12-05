@@ -2,11 +2,11 @@
 [submodule "fossil-offchain-processor"]
 	path = fossil-offchain-processor
 	url = https://github.com/OilerNetwork/fossil-offchain-processor
-	branch = main
+	branch = eugen/debug-fossil-callback
 [submodule "pitchlake-plugin-juno"]
 	path = pitchlake-plugin-juno
 	url = https://github.com/OilerNetwork/pitchlake-plugin-juno
-	branch = main
+	branch = launcher/sequencer-version
 [submodule "pitchlake-ui-new"]
 	path = pitchlake-ui-new
 	url = https://github.com/OilerNetwork/pitchlake-ui-new.git
