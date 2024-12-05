@@ -1,31 +1,4 @@
 services:
-  # Fossil Offchain Processor
-  fossil_db:
-    image: postgres:16-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  fossil_migration:
-    build:
-      context: ./fossil-offchain-processor
-      dockerfile: crates/server/Dockerfile.migration
-    environment:
-      - DATABASE_URL=postgres://postgres:postgres@fossil_db:5432/postgres
-    depends_on:
-      fossil_db:
-        condition: service_healthy
-
   fossil_api:
     platform: linux/amd64
     build:
@@ -39,10 +12,6 @@ services:
       - STARKNET_ACCOUNT_ADDRESS=${FOSSIL_ADDRESS}
       - STARKNET_PRIVATE_KEY=${FOSSIL_PRIVATE_KEY}
       - ETH_RPC_URL=${ETH_MAINNET_RPC}
-
-    depends_on:
-      fossil_migration:
-        condition: service_completed_successfully
 
   # Pitchlake
   pitchlake_db:
@@ -90,27 +59,31 @@ services:
       timeout: 10s
       retries: 5
 
-  pitchlake-contracts-deployment:
+  contracts-deployment:
     platform: linux/amd64
     build:
       context: ./pitchlake_starknet
       dockerfile: Dockerfile
-      args:
-        - SIGNER_PRIVATE_KEY=${PITCHLAKE_DEPLOYER_PRIVATE_KEY}
-        - DEVNET_RPC=http://juno_plugin:6060
-        - SIGNER_ADDRESS=${PITCHLAKE_DEPLOYER_ADDRESS}
-        - FOSSIL_PROCESSOR_ADDRESS=${FOSSIL_ADDRESS}
-        - VAULT_ROUND_DURATION=${VAULT_ROUND_DURATION}
-        - ARGENT_ADDRESS=${ARGENT_WALLET_ADDRESS}
-        - ARGENT_SALT=${ARGENT_WALLET_SALT}
-        - ARGENT_CONSTRUCTOR_ARG1=${ARGENT_WALLET_CONSTRUCTOR_ARG1}
+    environment:
+      STARKNET_PRIVATE_KEY: ${PITCHLAKE_DEPLOYER_PRIVATE_KEY}
+      STARKNET_RPC: http://juno_plugin:6060
+      SIGNER_ADDRESS: ${PITCHLAKE_DEPLOYER_ADDRESS}
+      FOSSIL_PROCESSOR_ADDRESS: ${FOSSIL_ADDRESS}
+      VAULT_ALPHA: ${VAULT_ALPHA}
+      VAULT_STRIKE: ${VAULT_STRIKE}
+      ROUND_TRANSITION_DURATION: ${ROUND_TRANSITION_DURATION}
+      AUCTION_DURATION: ${AUCTION_DURATION}
+      ROUND_DURATION: ${ROUND_DURATION}
+      ARGENT_ADDRESS: ${ARGENT_WALLET_ADDRESS}
+      ARGENT_SALT: ${ARGENT_WALLET_SALT}
+      ARGENT_CONSTRUCTOR_ARG1: ${ARGENT_WALLET_CONSTRUCTOR_ARG1}
     volumes:
       - shared:/contracts/katana
     depends_on:
       juno_plugin:
         condition: service_healthy
   
-  pitchlake_websocket:
+  websocket:
     build:
       context: ./pitchlake_db_server
       dockerfile: Dockerfile
@@ -120,7 +93,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      pitchlake-contracts-deployment:
+      contracts-deployment:
         condition: service_completed_successfully
 
   frontend:
@@ -139,8 +112,9 @@ services:
       - NEXT_PUBLIC_RPC_URL_SEPOLIA=${STARKNET_SEPOLIA_RPC}
       - NEXT_PUBLIC_RPC_URL_DEVNET=http://localhost:5050
       - NEXT_PUBLIC_RPC_URL_JUNO_DEVNET=http://localhost:6060
-      - NEXT_PUBLIC_WS_URL=http://pitchlake_websocket:8080
+      - NEXT_PUBLIC_WS_URL=http://localhost:8080
       - FOSSIL_API_KEY=${FOSSIL_API_KEY}
+      - FOSSIL_DB_URL=${FOSSIL_DATABASE_URL}
       - NEXT_PUBLIC_FOSSIL_API_URL=http://fossil_api:3000
   
     command: >
@@ -152,7 +126,7 @@ services:
       pnpm run build &&
       exec pnpm start -p ${PORT}'
     depends_on:
-      pitchlake-contracts-deployment:
+      contracts-deployment:
         condition: service_completed_successfully
 
 volumes:
