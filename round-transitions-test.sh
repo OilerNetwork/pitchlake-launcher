@@ -17,8 +17,8 @@ if [ -z "$FOSSIL_API_KEY" ]; then
     exit 1
 fi
 
-FOSSILCLIENT_ADDRESS=0x073fa5634b52a6c810704aa9612a9d7e64fad796df175383ca92bf79a22f662b
-VAULT_ADDRESS=0x01e98ecbd3d5c1ba216b2d081dded22391d47c2a1ff29a547b19a735650b102a
+FOSSILCLIENT_ADDRESS=0x04a79841d82dc71f8980faf48be940013e97f59c49856e70a15e45f237fa7f99
+VAULT_ADDRESS=0x055a4fc7803d9a652a500d95fddf585edf619fcca6a761ef31d56563a9dde22e
 
 echo "Testing round transitions for vault at $VAULT_ADDRESS"
 
@@ -71,7 +71,7 @@ TIME_UNTIL_SETTLEMENT=$((SETTLEMENT - NOW))
 # Check current state and run appropriate tests
 if [ "$ROUND_STATE" -eq 0 ] || [ "$NEW_ROUND_STATE" -eq 0 ]; then
     echo "Round in OPEN state (0), running OPEN state tests..."
-    
+
     #==============================================
     #test_start_auction_early_should_fail
     #==============================================
