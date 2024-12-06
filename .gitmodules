@@ -6,7 +6,7 @@
 [submodule "pitchlake-plugin-juno"]
 	path = pitchlake-plugin-juno
 	url = https://github.com/OilerNetwork/pitchlake-plugin-juno
-	branch = launcher/sequencer-version
+	branch = feat/launcher-branch-2
 [submodule "pitchlake-ui-new"]
 	path = pitchlake-ui-new
 	url = https://github.com/OilerNetwork/pitchlake-ui-new.git
