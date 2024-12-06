@@ -70,7 +70,7 @@ TODO: Write an automated way to fetch the class hash
 
 To start all the services run:
 ```bash
-docker compose up
+source .env && docker compose up
 ```
 
 To track the logs of a service, open a new terminal and run:

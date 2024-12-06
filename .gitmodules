@@ -10,7 +10,7 @@
 [submodule "pitchlake-ui-new"]
 	path = pitchlake-ui-new
 	url = https://github.com/OilerNetwork/pitchlake-ui-new.git
-	branch = main
+	branch = develop
 [submodule "pitchlake_starknet"]
 	path = pitchlake_starknet
 	url = https://github.com/OilerNetwork/pitchlake_starknet.git
