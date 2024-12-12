@@ -17,8 +17,15 @@ if [ -z "$FOSSIL_API_KEY" ]; then
     exit 1
 fi
 
-FOSSILCLIENT_ADDRESS=0x04a79841d82dc71f8980faf48be940013e97f59c49856e70a15e45f237fa7f99
-VAULT_ADDRESS=0x055a4fc7803d9a652a500d95fddf585edf619fcca6a761ef31d56563a9dde22e
+if [ -z "$FOSSILCLIENT_ADDRESS" ]; then
+    echo "ERROR: FOSSILCLIENT_ADDRESS not set in .env file"
+    exit 1
+fi
+
+if [ -z "$VAULT_ADDRESS" ]; then
+    echo "ERROR: VAULT_ADDRESS not set in .env file"
+    exit 1
+fi
 
 echo "Testing round transitions for vault at $VAULT_ADDRESS"
 
@@ -80,10 +87,10 @@ if [ "$ROUND_STATE" -eq 0 ] || [ "$NEW_ROUND_STATE" -eq 0 ]; then
     echo "Attempting to start auction $((AUCTION_START - NOW)) seconds too early (should fail)"
 
     if starkli invoke $VAULT_ADDRESS start_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-        echo "ERROR: Transaction succeeded but should have been rejected!"
+        echo "[FAILED] Transaction succeeded but should have been rejected!"
         exit 1
     else
-        echo "Transaction correctly rejected (auction start time not reached)"
+        echo "[PASSED] Transaction correctly rejected (auction start time not reached)"
     fi
 
     #==============================================
@@ -103,9 +110,9 @@ if [ "$ROUND_STATE" -eq 0 ] || [ "$NEW_ROUND_STATE" -eq 0 ]; then
     echo "New round state: $NEW_ROUND_STATE"
 
     if [ "$NEW_ROUND_STATE" -eq 1 ]; then
-        echo "Successfully transitioned to AUCTIONING state"
+        echo "[PASSED] Successfully transitioned to AUCTIONING state"
     else
-        echo "Failed to transition to AUCTIONING state"
+        echo "[FAILED] Failed to transition to AUCTIONING state"
         exit 1
     fi
 fi
@@ -121,10 +128,10 @@ if [ "$ROUND_STATE" -eq 1 ] || [ "$NEW_ROUND_STATE" -eq 1 ]; then
     echo "Attempting to end auction $((AUCTION_END - NOW)) seconds too early (should fail)"
 
     if starkli invoke $VAULT_ADDRESS end_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-        echo "ERROR: Transaction succeeded but should have been rejected!"
+        echo "[FAILED] Transaction succeeded but should have been rejected!"
         exit 1
     else
-        echo "Transaction correctly rejected (auction end time not reached)"
+        echo "[PASSED] Transaction correctly rejected (auction end time not reached)"
     fi
 
     #==============================================
@@ -141,9 +148,9 @@ if [ "$ROUND_STATE" -eq 1 ] || [ "$NEW_ROUND_STATE" -eq 1 ]; then
     echo "New round state: $NEW_ROUND_STATE"
 
     if [ "$NEW_ROUND_STATE" -eq 2 ]; then
-        echo "Successfully transitioned to RUNNING state"
+        echo "[PASSED] Successfully transitioned to RUNNING state"
     else
-        echo "Failed to transition to RUNNING state"
+        echo "[FAILED] Failed to transition to RUNNING state"
         exit 1
     fi
 fi
@@ -159,10 +166,10 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     echo "Attempting to settle round $((SETTLEMENT - NOW)) seconds too early (should fail)"
 
     if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-        echo "ERROR: Transaction succeeded but should have been rejected!"
+        echo "[FAILED] Transaction succeeded but should have been rejected!"
         exit 1
     else
-        echo "Transaction correctly rejected (settlement time not reached)"
+        echo "[PASSED] Transaction correctly rejected (settlement time not reached)"
     fi
 
     #==============================================
@@ -174,10 +181,10 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     echo "\nTesting settlement without pricing data rejection..."
 
     if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-        echo "ERROR: Transaction succeeded but should have been rejected!"
+        echo "[FAILED] Transaction succeeded but should have been rejected!"
         exit 1
     else
-        echo "Transaction correctly rejected (pricing data not set)"
+        echo "[PASSED] Transaction correctly rejected (pricing data not set)"
     fi
 
     #==============================================
@@ -253,7 +260,7 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     EXIT_CODE=$?
 
     if [ $EXIT_CODE -ne 0 ]; then
-        echo "ERROR: Transaction failed but should have succeeded!"
+        echo "[FAILED] Transaction failed but should have succeeded!"
         echo "Output: $OUTPUT"
         exit 1
     fi
@@ -267,9 +274,9 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     echo "New round state: $NEW_ROUND_STATE"
 
     if [ "$NEW_ROUND_STATE" -eq 3 ]; then
-        echo "Successfully transitioned to SETTLED state"
+        echo "[PASSED] Successfully transitioned to SETTLED state"
     else
-        echo "Failed to transition to SETTLED state"
+        echo "[FAILED] Failed to transition to SETTLED state"
         exit 1
     fi
 fi
