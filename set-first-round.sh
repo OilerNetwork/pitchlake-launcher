@@ -17,8 +17,15 @@ if [ -z "$FOSSIL_API_KEY" ]; then
     exit 1
 fi
 
-FOSSILCLIENT_ADDRESS=0x04a79841d82dc71f8980faf48be940013e97f59c49856e70a15e45f237fa7f99
-VAULT_ADDRESS=0x0473c4b091ba7c9afacab4d8f4cf5bbd5ba0a5e7bebee98fcd3d80564ac00935
+if [ -z "$FOSSILCLIENT_ADDRESS" ]; then
+    echo "ERROR: FOSSILCLIENT_ADDRESS not set in .env file"
+    exit 1
+fi
+
+if [ -z "$VAULT_ADDRESS" ]; then
+    echo "ERROR: VAULT_ADDRESS not set in .env file"
+    exit 1
+fi
 
 ONE_MONTH_SECONDS=2592000
 ONE_WEEK_SECONDS=604800

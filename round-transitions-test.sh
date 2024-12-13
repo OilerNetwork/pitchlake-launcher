@@ -82,9 +82,9 @@ if [ "$ROUND_STATE" -eq 0 ] || [ "$NEW_ROUND_STATE" -eq 0 ]; then
     #==============================================
     #test_start_auction_early_should_fail
     #==============================================
-    echo "\nTesting early auction start rejection..."
+    echo "\n[TEST] start_auction_early_should_fail"
     NOW=$(date +%s)
-    echo "Attempting to start auction $((AUCTION_START - NOW)) seconds too early (should fail)"
+    echo "...attempting to start auction $((AUCTION_START - NOW)) seconds too early (should fail)"
 
     if starkli invoke $VAULT_ADDRESS start_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
         echo "[FAILED] Transaction succeeded but should have been rejected!"
@@ -97,10 +97,11 @@ if [ "$ROUND_STATE" -eq 0 ] || [ "$NEW_ROUND_STATE" -eq 0 ]; then
     #test_start_auction_on_time_should_succeed
     #==============================================
 
-    echo "\nWaiting for auction_start time to be reached..."
+    echo "\n[TEST] start_auction_on_time_should_succeed"
+    echo "...waiting for auction_start time to be reached..."
     NOW=$(date +%s)
     sleep $((AUCTION_START - NOW + 1))
-    echo "\nTransitioning round from OPEN (0) to AUCTIONING (1)..."
+    echo "...transitioning round from OPEN (0) to AUCTIONING (1)..."
             
     # Call start_auction on the vault and wait for confirmation
     starkli invoke $VAULT_ADDRESS start_auction --account $STARKNET_ACCOUNT --watch
@@ -123,9 +124,9 @@ if [ "$ROUND_STATE" -eq 1 ] || [ "$NEW_ROUND_STATE" -eq 1 ]; then
     #==============================================
     #test_end_auction_early_should_fail
     #==============================================
-    echo "\nTesting ending auction early..."
+    echo "\n[TEST] end_auction_early_should_fail"
     NOW=$(date +%s)
-    echo "Attempting to end auction $((AUCTION_END - NOW)) seconds too early (should fail)"
+    echo "...attempting to end auction $((AUCTION_END - NOW)) seconds too early (should fail)"
 
     if starkli invoke $VAULT_ADDRESS end_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
         echo "[FAILED] Transaction succeeded but should have been rejected!"
@@ -137,10 +138,11 @@ if [ "$ROUND_STATE" -eq 1 ] || [ "$NEW_ROUND_STATE" -eq 1 ]; then
     #==============================================
     #test_end_auction_on_time_should_succeed
     #==============================================
-    echo "\nWaiting for auction_end time to be reached..."
+    echo "\n[TEST] end_auction_on_time_should_succeed"
+    echo "...waiting for auction_end time to be reached..."
     NOW=$(date +%s)
     sleep $((AUCTION_END - NOW + 1))
-    echo "\nTransitioning round from AUCTIONING (1) to RUNNING (2)..."
+    echo "...transitioning round from AUCTIONING (1) to RUNNING (2)..."
             
     starkli invoke $VAULT_ADDRESS end_auction --account $STARKNET_ACCOUNT --watch
 
@@ -162,8 +164,8 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     #test_settle_round_early_should_fail
     #==============================================
     NOW=$(date +%s)
-    echo "\nTesting early settlement rejection..."
-    echo "Attempting to settle round $((SETTLEMENT - NOW)) seconds too early (should fail)"
+    echo "\n[TEST] settle_round_early_should_fail"
+    echo "...attempting to settle round $((SETTLEMENT - NOW)) seconds too early (should fail)"
 
     if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
         echo "[FAILED] Transaction succeeded but should have been rejected!"
@@ -175,10 +177,11 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     #==============================================
     #test_settle_round_without_pricing_data_should_fail
     #==============================================
-    echo "\nWaiting for settlement time to be reached..."
+    echo "\n[TEST] settle_round_without_pricing_data_should_fail"
+    echo "...waiting for settlement time to be reached..."
     NOW=$(date +%s)
     sleep $((SETTLEMENT - NOW + 1))
-    echo "\nTesting settlement without pricing data rejection..."
+    echo "...testing settlement without pricing data rejection..."
 
     if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
         echo "[FAILED] Transaction succeeded but should have been rejected!"
@@ -190,7 +193,8 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     #==============================================
     #test_settle_round_should_succeed
     #==============================================
-    echo "\nSetting up settlement with Fossil..."
+    echo "\n[TEST] settle_round_should_succeed"
+    echo "...setting up settlement with Fossil..."
 
     # Get request to settle round
     REQUEST_DATA=$(starkli call $VAULT_ADDRESS get_request_to_settle_round)
