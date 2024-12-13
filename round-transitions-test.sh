@@ -3,6 +3,10 @@
 # Ensure the script stops on the first error
 set -e
 
+STARKNET_ACCOUNT=account.json
+STARKNET_RPC=http://localhost:6060
+STARKNET_PRIVATE_KEY=0x2bff1b26236b72d8a930be1dfbee09f79a536a49482a4c8b8f1030e2ab3bf1b
+
 # Load environment variables from .env file
 if [ -f .env ]; then
     export $(cat .env | grep -v '#' | sed 's/\r$//' | xargs)
