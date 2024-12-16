@@ -12,6 +12,7 @@ services:
       - STARKNET_ACCOUNT_ADDRESS=${FOSSIL_ADDRESS}
       - STARKNET_PRIVATE_KEY=${FOSSIL_PRIVATE_KEY}
       - ETH_RPC_URL=${ETH_MAINNET_RPC}
+      - RUST_LOG=debug
 
   # Pitchlake
   pitchlake_db:
@@ -32,6 +33,7 @@ services:
       retries: 5
 
   juno_plugin:
+    platform: linux/arm64
     build:
       context: ./pitchlake-plugin-juno
       dockerfile: Dockerfile
@@ -66,6 +68,10 @@ services:
     build:
       context: ./pitchlake_starknet
       dockerfile: Dockerfile
+      args:
+        COMPILER_VERSION: ${COMPILER_VERSION}
+        STARKLI_VERSION: ${STARKLI_VERSION}
+        SCARB_VERSION: ${SCARB_VERSION}
     environment:
       STARKNET_PRIVATE_KEY: ${PITCHLAKE_DEPLOYER_PRIVATE_KEY}
       STARKNET_RPC: http://juno_plugin:6060
@@ -76,9 +82,6 @@ services:
       ROUND_TRANSITION_DURATION: ${ROUND_TRANSITION_DURATION}
       AUCTION_DURATION: ${AUCTION_DURATION}
       ROUND_DURATION: ${ROUND_DURATION}
-      ARGENT_ADDRESS: ${ARGENT_WALLET_ADDRESS}
-      ARGENT_SALT: ${ARGENT_WALLET_SALT}
-      ARGENT_CONSTRUCTOR_ARG1: ${ARGENT_WALLET_CONSTRUCTOR_ARG1}
     volumes:
       - shared:/contracts/katana
     depends_on:
@@ -101,7 +104,7 @@ services:
   frontend:
     build:
       context: ./pitchlake-ui-new
-      dockerfile: Dockerfile.no-build
+      dockerfile: Dockerfile.dev-env
     ports:
       - "${FRONTEND_PORT}:${FRONTEND_PORT}"
     volumes:
@@ -118,7 +121,7 @@ services:
       - NEXT_PUBLIC_WS_URL=http://localhost:8080
       - FOSSIL_API_KEY=${FOSSIL_API_KEY}
       - FOSSIL_DB_URL=${FOSSIL_DATABASE_URL}
-      - NEXT_PUBLIC_FOSSIL_API_URL=http://localhost:3000 #TODO: fossil_api
+      - NEXT_PUBLIC_FOSSIL_API_URL=http://fossil_api:3000
     command: >
       /bin/sh -c '
       cd /app/env &&

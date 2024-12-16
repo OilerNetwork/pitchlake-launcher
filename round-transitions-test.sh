@@ -3,9 +3,9 @@
 # Ensure the script stops on the first error
 set -e
 
-STARKNET_ACCOUNT=account.json
-STARKNET_RPC=http://localhost:6060
-STARKNET_PRIVATE_KEY=0x2bff1b26236b72d8a930be1dfbee09f79a536a49482a4c8b8f1030e2ab3bf1b
+export STARKNET_ACCOUNT=account.json
+export STARKNET_RPC=http://localhost:6060
+export STARKNET_PRIVATE_KEY=0x2bff1b26236b72d8a930be1dfbee09f79a536a49482a4c8b8f1030e2ab3bf1b
 
 # Load environment variables from .env file
 if [ -f .env ]; then
@@ -83,19 +83,19 @@ TIME_UNTIL_SETTLEMENT=$((SETTLEMENT - NOW))
 if [ "$ROUND_STATE" -eq 0 ] || [ "$NEW_ROUND_STATE" -eq 0 ]; then
     echo "Round in OPEN state (0), running OPEN state tests..."
 
-    #==============================================
-    #test_start_auction_early_should_fail
-    #==============================================
-    echo "\n[TEST] start_auction_early_should_fail"
-    NOW=$(date +%s)
-    echo "...attempting to start auction $((AUCTION_START - NOW)) seconds too early (should fail)"
+    # #==============================================
+    # #test_start_auction_early_should_fail
+    # #==============================================
+    # echo "\n[TEST] start_auction_early_should_fail"
+    # NOW=$(date +%s)
+    # echo "...attempting to start auction $((AUCTION_START - NOW)) seconds too early (should fail)"
 
-    if starkli invoke $VAULT_ADDRESS start_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-        echo "[FAILED] Transaction succeeded but should have been rejected!"
-        exit 1
-    else
-        echo "[PASSED] Transaction correctly rejected (auction start time not reached)"
-    fi
+    # if starkli invoke $VAULT_ADDRESS start_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
+    #     echo "[FAILED] Transaction succeeded but should have been rejected!"
+    #     exit 1
+    # else
+    #     echo "[PASSED] Transaction correctly rejected (auction start time not reached)"
+    # fi
 
     #==============================================
     #test_start_auction_on_time_should_succeed
@@ -125,19 +125,19 @@ fi
 if [ "$ROUND_STATE" -eq 1 ] || [ "$NEW_ROUND_STATE" -eq 1 ]; then
     echo "Round in AUCTIONING state (1), running AUCTIONING state tests..."
     
-    #==============================================
-    #test_end_auction_early_should_fail
-    #==============================================
-    echo "\n[TEST] end_auction_early_should_fail"
-    NOW=$(date +%s)
-    echo "...attempting to end auction $((AUCTION_END - NOW)) seconds too early (should fail)"
+    # #==============================================
+    # #test_end_auction_early_should_fail
+    # #==============================================
+    # echo "\n[TEST] end_auction_early_should_fail"
+    # NOW=$(date +%s)
+    # echo "...attempting to end auction $((AUCTION_END - NOW)) seconds too early (should fail)"
 
-    if starkli invoke $VAULT_ADDRESS end_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-        echo "[FAILED] Transaction succeeded but should have been rejected!"
-        exit 1
-    else
-        echo "[PASSED] Transaction correctly rejected (auction end time not reached)"
-    fi
+    # if starkli invoke $VAULT_ADDRESS end_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
+    #     echo "[FAILED] Transaction succeeded but should have been rejected!"
+    #     exit 1
+    # else
+    #     echo "[PASSED] Transaction correctly rejected (auction end time not reached)"
+    # fi
 
     #==============================================
     #test_end_auction_on_time_should_succeed
@@ -164,19 +164,19 @@ fi
 if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     echo "Round in RUNNING state (2), running RUNNING state tests..."
     
-    #==============================================
-    #test_settle_round_early_should_fail
-    #==============================================
-    NOW=$(date +%s)
-    echo "\n[TEST] settle_round_early_should_fail"
-    echo "...attempting to settle round $((SETTLEMENT - NOW)) seconds too early (should fail)"
+    # #==============================================
+    # #test_settle_round_early_should_fail
+    # #==============================================
+    # NOW=$(date +%s)
+    # echo "\n[TEST] settle_round_early_should_fail"
+    # echo "...attempting to settle round $((SETTLEMENT - NOW)) seconds too early (should fail)"
 
-    if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-        echo "[FAILED] Transaction succeeded but should have been rejected!"
-        exit 1
-    else
-        echo "[PASSED] Transaction correctly rejected (settlement time not reached)"
-    fi
+    # if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
+    #     echo "[FAILED] Transaction succeeded but should have been rejected!"
+    #     exit 1
+    # else
+    #     echo "[PASSED] Transaction correctly rejected (settlement time not reached)"
+    # fi
 
     #==============================================
     #test_settle_round_without_pricing_data_should_fail

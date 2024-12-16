@@ -18,47 +18,37 @@ On top of that, the docker compose file will deploy the Pitchlake contracts to t
 
 After cloning the repo, you need to initialize the submodules by running:
 ```bash
-git submodule update --init --recursive --remote
+git submodule init
 ```
 
-Whenever you want to fetch the latest changes from the submodules, run:
+To fetch the latest changes from the submodules, run:
 ```bash
-git submodule update --remote --recursive
+git submodule update --remote
 ```
-
-**Note:** Whenever fetching the latest changes from the submodules, the docker images for each component will likely be outdated. To rebuild the images, run `docker compose build` in the root of the repo. If things don't look as expected, you can also run `docker compose build --no-cache` for a clean build.
 
 ### 2. Setting up the Argent wallet for local testing
 
 The steps below are needed so you can interact with the UI on the local devnet.
 
 - Install the Argent wallet extension in your browser
-- Go to Settings -> Developer Settings -> Manage Networks -> click on the + button
-- Add a new network with the following:
-  - Name: Juno Devnet
+- Go to Settings -> Developer Settings -> Manage Networks -> Devnet
+- Update the devnet config to the following:
   - RPC URL: http://localhost:6060
   - Chain ID: SN_JUNO_SEQUENCER
-- Connect the wallet to the newly created network and create a new account
-- Next you will need to copy the wallet's address, salt and constructor arguments and paste them into the .env file. 
-    - the salt and constructor arguments can be found in the Argent extension under Settings -> Developer Settings -> Deployment Data
-    - once you click on the "Deployment Data" button, you will see a json object similar to the one below -- you need to copy the `addressSalt` and **the second value** in the `constructorCalldata` array.
-
-    ```json
-    {
-        "classHash":"0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f",
-        "constructorCalldata":["0","37459222005894634870375857944293937532221532474070351093573957772534191899","1"],
-        "addressSalt":"0x15337fc442ab75a3589746a426987f9dfb49b3abd8d447dab3550c3ead971b",
-        "contractAddress":"0x0768d44b56fd0f6f660a449697c906391b1ae682b30086f4d521c4c414d399d9",
-        "version":"1"
-    }
-    ```
+  - Account classhash: 0x1a736d6ed154502257f02b1ccdf4d9d1089f80811cd6acad48e6b6a9d1f2003
+  - Fee Token: 0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
+- Import the following account into the Argent wallet:
+  - Address: 0x406a8f52e741619b17410fc90774e4b36f968e1a71ae06baacfe1f55d987923
+  - Private key: 0x3a4791edf67fa0b32b812e41bc8bc4e9b79915412b1331f7669cbe23e97e15a
 
 ### 3. Fetch the vault contract class hash
 
 The vault contract class hash is needed for the Indexer to identify the address of the vault.
-You can generate the class hash using `starkli declare` and then copying the class hash from the output. 
+To generate the class hash, run:
+1. `source .env`
+2. `docker compose -f docker-compose.declare-vault.yml up declare-vault`
 
-TODO: Write an automated way to fetch the class hash
+Then copy the class hash from the output and paste it into the .env file.
 
 ### 3. Setting up the environment variables
 
@@ -69,16 +59,25 @@ TODO: Write an automated way to fetch the class hash
 ### 4. Starting the services
 
 To start all the services run:
-```bash
-source .env && docker compose up
-```
+1. `source .env`
+2. `docker compose up`
 
 To track the logs of a service, open a new terminal and run:
 ```bash
 docker compose logs -f <service_name>
 ```
 
+**Note:** Whenever fetching the latest changes from the submodules, the docker images for each component will likely be outdated. To rebuild the images, run `docker compose build` in the root of the repo. If things don't look as expected, you can also run `docker compose build --no-cache` for a clean build.
+
 **Note:** The devnet's state is persistent between restarts. If you want to reset the state, you need to run `docker compose down -v` to remove the volumes, then run `docker compose up` again.
+
+## Runninng the integration tests
+
+To run the integration tests, you need to have the contracts deployed. Once the contracts are deployed, you need to fill in the FOSSILCLIENT_ADDRESS and VAULT_ADDRESS values in the .env file and run:
+
+```bash
+sh round-transitions-test.sh
+```
 
 ## Recommended workflow
 
@@ -86,7 +85,7 @@ Let's say we want to work on one of the components. We can add changes to the su
 
 1. cd into submodule directory
 2. create a new branch: `git checkout -b my-branch`
-3. make changes and commit them: `git commit -am 'my changes'`
+3. make changes and commit them
 4. push to remote: `git push origin my-branch`
 5. open a PR in the submodule's remote repo
 

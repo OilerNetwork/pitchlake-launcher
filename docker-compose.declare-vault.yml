@@ -1,0 +1,32 @@
+services:
+  katana:
+    build:
+      context: ./pitchlake_starknet
+      dockerfile: Dockerfile.katana
+    ports:
+      - "5050:5050"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-X", "POST", 
+            "-H", "Content-Type: application/json",
+            "--data", '{"jsonrpc":"2.0","method":"starknet_chainId","params":[],"id":1}',
+            "http://localhost:5050"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  declare-vault:
+    platform: linux/amd64
+    build:
+      context: ./pitchlake_starknet
+      dockerfile: Dockerfile.declare-vault
+      args:
+        STARKLI_VERSION: ${STARKLI_VERSION}
+        SCARB_VERSION: ${SCARB_VERSION}
+        COMPILER_VERSION: ${COMPILER_VERSION}
+    environment:
+      STARKNET_ACCOUNT: katana-0
+      STARKNET_RPC: http://katana:5050
+      STARKNET_PRIVATE_KEY: 0x2bbf4f9fd0bbb2e60b0316c1fe0b76cf7a4d0198bd493ced9b8df2a3a24d68a
+    depends_on:
+      katana:
+        condition: service_healthy
