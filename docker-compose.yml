@@ -1,4 +1,139 @@
-include:
-  - path: ./fossil-offchain-processor/crates/server/docker-compose.yml
-  - path: ./pitchlake-plugin-juno/docker-compose.yml
-  - path: ./pitchlake-ui-new/docker-compose.yml
+services:
+  fossil_api:
+    platform: linux/amd64
+    build:
+      context: ./fossil-offchain-processor
+      dockerfile: crates/server/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${FOSSIL_DATABASE_URL}
+      - STARKNET_RPC_URL=http://juno_plugin:6060
+      - STARKNET_ACCOUNT_ADDRESS=${FOSSIL_ADDRESS}
+      - STARKNET_PRIVATE_KEY=${FOSSIL_PRIVATE_KEY}
+      - ETH_RPC_URL=${ETH_MAINNET_RPC}
+      - RUST_LOG=debug
+
+  # Pitchlake
+  pitchlake_db:
+    image: postgres:16
+    command: -p 5433
+    environment:
+      POSTGRES_DB: pitchlake_db
+      POSTGRES_USER: pitchlake_user
+      POSTGRES_PASSWORD: pitchlake_password
+    ports:
+      - "5433:5433"
+    volumes:
+      - postgres_data:/var/lib/postgresql/pitchlake_data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pitchlake_user -d pitchlake_db -p 5433"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  juno_plugin:
+    platform: linux/arm64
+    build:
+      context: ./pitchlake-plugin-juno
+      dockerfile: Dockerfile
+    environment:
+      DB_URL: postgres://pitchlake_user:pitchlake_password@pitchlake_db:5433/pitchlake_db?sslmode=disable
+      VAULT_HASH: ${VAULT_HASH}
+      UDC_ADDRESS: ${UDC_ADDRESS}
+      L1_URL: ${ETH_MAINNET_RPC}
+      DEPLOYER: ${PITCHLAKE_DEPLOYER_ADDRESS}
+      CURSOR: 0
+    depends_on:
+      pitchlake_db:
+        condition: service_healthy
+    ports:
+      - "6060:6060"
+    command: >
+      bash -c "./build/juno --plugin-path myplugin.so --http --http-port=6060 --http-host=0.0.0.0 
+      --db-path=../seq-db --log-level=trace --seq-enable --seq-block-time=1 --network sequencer
+      --seq-genesis-file genesis/genesis_prefund_accounts.json --seq-disable-fees 
+      --rpc-call-max-steps=4123000 --rpc-cors-enable"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-X", "POST", 
+            "-H", "Content-Type: application/json",
+            "--data", '{"jsonrpc":"2.0","method":"juno_version","params":[],"id":1}',
+            "http://localhost:6060"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  contracts-deployment:
+    platform: linux/amd64
+    build:
+      context: ./pitchlake_starknet
+      dockerfile: Dockerfile
+      args:
+        COMPILER_VERSION: ${COMPILER_VERSION}
+        STARKLI_VERSION: ${STARKLI_VERSION}
+        SCARB_VERSION: ${SCARB_VERSION}
+    environment:
+      STARKNET_PRIVATE_KEY: ${PITCHLAKE_DEPLOYER_PRIVATE_KEY}
+      STARKNET_RPC: http://juno_plugin:6060
+      SIGNER_ADDRESS: ${PITCHLAKE_DEPLOYER_ADDRESS}
+      FOSSIL_PROCESSOR_ADDRESS: ${FOSSIL_ADDRESS}
+      VAULT_ALPHA: ${VAULT_ALPHA}
+      VAULT_STRIKE: ${VAULT_STRIKE}
+      ROUND_TRANSITION_DURATION: ${ROUND_TRANSITION_DURATION}
+      AUCTION_DURATION: ${AUCTION_DURATION}
+      ROUND_DURATION: ${ROUND_DURATION}
+    volumes:
+      - shared:/contracts/katana
+    depends_on:
+      juno_plugin:
+        condition: service_healthy
+
+  websocket:
+    build:
+      context: ./pitchlake_db_server
+      dockerfile: Dockerfile
+    environment:
+     APP_URL: localhost:${FRONTEND_PORT}
+     DB_URL: postgres://pitchlake_user:pitchlake_password@pitchlake_db:5433/pitchlake_db
+    ports:
+      - "8080:8080"
+    depends_on:
+      contracts-deployment:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./pitchlake-ui-new
+      dockerfile: Dockerfile.dev-env
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    volumes:
+      - shared:/app/env
+    environment:
+      - NODE_ENV=production
+      - PORT=${FRONTEND_PORT}
+      - NEXT_PUBLIC_ENVIRONMENT=${UI_DATA_SOURCE}
+      - NEXT_PUBLIC_RPC_URL_MAINNET=${STARKNET_MAINNET_RPC}
+      - NEXT_PUBLIC_RPC_URL_SEPOLIA=${STARKNET_SEPOLIA_RPC}
+      - NEXT_PUBLIC_RPC_URL_DEVNET=http://localhost:5050
+      - NEXT_PUBLIC_RPC_URL_JUNO_DEVNET=http://localhost:6060
+      - JUNO_DOCKER_HOST=http://juno_plugin:6060
+      - NEXT_PUBLIC_WS_URL=http://localhost:8080
+      - FOSSIL_API_KEY=${FOSSIL_API_KEY}
+      - FOSSIL_DB_URL=${FOSSIL_DATABASE_URL}
+      - NEXT_PUBLIC_FOSSIL_API_URL=http://fossil_api:3000
+    command: >
+      /bin/sh -c '
+      cd /app/env &&
+      export NEXT_PUBLIC_VAULT_ADDRESSES=$$(grep VAULT_ADDRESS deployment_addresses.env | cut -d"=" -f2) &&
+      cd /app &&
+      env | grep NEXT_PUBLIC_VAULT_ADDRESSES &&
+      pnpm run build &&
+      pnpm run start -p ${FRONTEND_PORT}'
+    depends_on:
+      contracts-deployment:
+        condition: service_completed_successfully
+
+volumes:
+  postgres_data:
+  shared:

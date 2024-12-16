@@ -1,21 +1,21 @@
-# [submodule "frontend"]
-# 	path = frontend
-# 	url = https://github.com/OilerNetwork/pitchlake-ui-new.git
-# [submodule "backend"]
-# 	path = backend
-# 	url = https://github.com/OilerNetwork/pitchlake_db_server.git
+
 [submodule "fossil-offchain-processor"]
 	path = fossil-offchain-processor
 	url = https://github.com/OilerNetwork/fossil-offchain-processor
+	branch = eugen/debug-fossil-callback
 [submodule "pitchlake-plugin-juno"]
 	path = pitchlake-plugin-juno
 	url = https://github.com/OilerNetwork/pitchlake-plugin-juno
-	branch = rianhughes/testing-plugin-w-sequencer
+	branch = feat/launcher-branch-2
 [submodule "pitchlake-ui-new"]
 	path = pitchlake-ui-new
 	url = https://github.com/OilerNetwork/pitchlake-ui-new.git
-	branch = eugen/docker
+	branch = develop
 [submodule "pitchlake_starknet"]
 	path = pitchlake_starknet
 	url = https://github.com/OilerNetwork/pitchlake_starknet.git
-	branch = eugen/docker
+	branch = develop
+[submodule "pitchlake_db_server"]
+	path = pitchlake_db_server
+	url = https://github.com/OilerNetwork/pitchlake_db_server
+	branch = main
