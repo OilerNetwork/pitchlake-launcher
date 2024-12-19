@@ -89,6 +89,17 @@ Let's say we want to work on one of the components. We can add changes to the su
 4. push to remote: `git push origin my-branch`
 5. open a PR in the submodule's remote repo
 
+## Common issues
+
+1. ### Transactions fail unexpectedly
+
+This is usually an issue around the Argent wallet storing the account's nonce in the browser's local storage. On startup, Juno deploys a new account with nonce 0, while Argent might still have the old nonce from a previous session. In these cases, the transaction will fail with a nonce error. (can be seen as a DEBUG log in the Juno logs)
+
+To fix this, you need to:
+1. Lock your wallet
+2. Right click inspect
+3. In console tab write `chrome.storage.session.clear()`  and enter
+4. Unlock your wallet
 
 
 
