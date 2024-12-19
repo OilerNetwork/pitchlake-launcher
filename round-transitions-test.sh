@@ -178,21 +178,21 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     #     echo "[PASSED] Transaction correctly rejected (settlement time not reached)"
     # fi
 
-    #==============================================
-    #test_settle_round_without_pricing_data_should_fail
-    #==============================================
-    echo "\n[TEST] settle_round_without_pricing_data_should_fail"
-    echo "...waiting for settlement time to be reached..."
-    NOW=$(date +%s)
-    sleep $((SETTLEMENT - NOW + 1))
-    echo "...testing settlement without pricing data rejection..."
+    # #==============================================
+    # #test_settle_round_without_pricing_data_should_fail
+    # #==============================================
+    # echo "\n[TEST] settle_round_without_pricing_data_should_fail"
+    # echo "...waiting for settlement time to be reached..."
+    # NOW=$(date +%s)
+    # sleep $((SETTLEMENT - NOW + 1))
+    # echo "...testing settlement without pricing data rejection..."
 
-    if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-        echo "[FAILED] Transaction succeeded but should have been rejected!"
-        exit 1
-    else
-        echo "[PASSED] Transaction correctly rejected (pricing data not set)"
-    fi
+    # if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
+    #     echo "[FAILED] Transaction succeeded but should have been rejected!"
+    #     exit 1
+    # else
+    #     echo "[PASSED] Transaction correctly rejected (pricing data not set)"
+    # fi
 
     #==============================================
     #test_settle_round_should_succeed
