@@ -31,7 +31,7 @@ git submodule update --remote
 The steps below are needed so you can interact with the UI on the local devnet.
 
 - Install the Argent wallet extension in your browser
-- Go to Settings -> Developer Settings -> Manage Networks -> Devnet
+- Go to Settings -> Advanced Settings -> Manage Networks -> Devnet
 - Update the devnet config to the following:
   - RPC URL: http://localhost:6060
   - Chain ID: SN_JUNO_SEQUENCER
