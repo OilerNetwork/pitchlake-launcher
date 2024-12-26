@@ -37,12 +37,14 @@ The steps below are needed so you can interact with the UI on the local devnet.
   - Chain ID: SN_JUNO_SEQUENCER
   - Account classhash: 0x1a736d6ed154502257f02b1ccdf4d9d1089f80811cd6acad48e6b6a9d1f2003
   - Fee Token: 0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
+- [the next step does not work since it is not possible to import the account without running the network]
 - Import the following account into the Argent wallet:
   - Address: 0x406a8f52e741619b17410fc90774e4b36f968e1a71ae06baacfe1f55d987923
   - Private key: 0x3a4791edf67fa0b32b812e41bc8bc4e9b79915412b1331f7669cbe23e97e15a
 
 ### 3. Fetch the vault contract class hash
 
+[The following will not work since .env is only created in the next step]
 The vault contract class hash is needed for the Indexer to identify the address of the vault.
 To generate the class hash, run:
 1. `source .env`
@@ -52,6 +54,7 @@ Then copy the class hash from the output and paste it into the .env file.
 
 ### 3. Setting up the environment variables
 
+[Incorrect step numbering, also it is not clear what values and where to insert from Argent]
 - Create a `.env` file in the root of the repo, using the `.env.example` as a template.
 - Paste in the Argent wallet values from the previous step and fill in the rest of the values
 - Paste in the vault contract class hash
