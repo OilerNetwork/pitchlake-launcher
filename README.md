@@ -70,6 +70,7 @@ To track the logs of a service, open a new terminal and run:
 ```bash
 docker compose logs -f <service_name>
 ```
+[Where is any info in readme on launching the UI / addresses of relative services / simple RPC tests and commands to verify everything?]
 
 **Note:** Whenever fetching the latest changes from the submodules, the docker images for each component will likely be outdated. To rebuild the images, run `docker compose build` in the root of the repo. If things don't look as expected, you can also run `docker compose build --no-cache` for a clean build.
 
@@ -79,6 +80,8 @@ docker compose logs -f <service_name>
 
 [Which contracts deployed? How to verify the contracts are deployed?]
 To run the integration tests, you need to have the contracts deployed. Once the contracts are deployed, you need to fill in the FOSSILCLIENT_ADDRESS and VAULT_ADDRESS values in the .env file and run:
+
+[ERROR: FOSSIL_API_KEY not set in .env file]
 
 ```bash
 sh round-transitions-test.sh
