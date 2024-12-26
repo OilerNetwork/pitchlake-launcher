@@ -66,6 +66,7 @@ To start all the services run:
 2. `docker compose up`
 
 To track the logs of a service, open a new terminal and run:
+[What is the service name here?]
 ```bash
 docker compose logs -f <service_name>
 ```
@@ -76,6 +77,7 @@ docker compose logs -f <service_name>
 
 ## Runninng the integration tests
 
+[Which contracts deployed? How to verify the contracts are deployed?]
 To run the integration tests, you need to have the contracts deployed. Once the contracts are deployed, you need to fill in the FOSSILCLIENT_ADDRESS and VAULT_ADDRESS values in the .env file and run:
 
 ```bash
