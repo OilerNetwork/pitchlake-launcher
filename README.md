@@ -23,7 +23,7 @@ All of these pieces are automatically configured to work together when you follo
 ## Prerequisites
 
 Before starting, please make sure you have the following installed on your computer:
-1. [Docker Desktop](https://www.docker.com/products/docker-desktop/) - the main tool we'll use to run everything
+1. [Docker](https://www.docker.com/products/docker-desktop/) - the main tool we'll use to run everything
 2. [Git](https://git-scm.com/downloads) - needed to download the code
 3. [Argent Wallet](https://www.argent.xyz/) browser extension - the wallet we'll use to interact with Pitchlake from your browser
 
@@ -42,22 +42,23 @@ Before starting, please make sure you have the following installed on your compu
 
 ### 2. Create Your Configuration File
 
-1. In the pitchlake-launcher folder, find the file named `.env.example`
-2. Make a copy of this file and name it `.env`
-3. Open the `.env` file in a text editor (like Notepad on Windows/TextEdit on Mac)
-4. Fill in the values for `FOSSIL_API_KEY` and `FOSSIL_DATABASE_URL`. Reach out to the Fossil / Pitchlake team for these values.
-5. Save the file
+Edit the .env file
+Copy `.env.example` to `.env` and fill in the appropriate values.
+
+1. Copy .env.example to .env
+   ```bash
+   cp .env.example .env
+   ```
+2. Fill in the values for `FOSSIL_API_KEY` and `FOSSIL_DATABASE_URL`. Reach out to the Fossil / Pitchlake team for these values.
+3. Save the file
 
 Notes:
-- See the following variables for the default duration of the different states in seconds: 
-  - `ROUND_TRANSITION_DURATION` - OPEN state duration
-  - `AUCTION_DURATION` - AUCTION state duration
-  - `ROUND_DURATION` - RUNNING state duration
+- The following variables set the duration of the round states: `ROUND_TRANSITION_DURATION` (Open State), `AUCTION_DURATION` (Auctioning State), `ROUND_DURATION` (Running State)
 - The frontend can be set to use data from different sources. 
   - `UI_DATA_SOURCE=rpc` - DEFAULT, get data from rpc
   - `UI_DATA_SOURCE=ws` - use the data provided by the websocket server
   - `UI_DATA_SOURCE=mock` - use mock data for testing (this is useful to devs who want to test/debug specific scenarios)
-- `FOSSIL_USE_MOCK_PRICING_DATA` can be used to set the Fossil API to use mock pricing data. Computing the pricing data takes a lot of time, so this is useful to speed up the development/testing process. By default this is set to true.
+- `FOSSIL_USE_MOCK_PRICING_DATA` can set the Fossil API to use mock pricing data. Computing the pricing data takes a lot of time, so this is useful to speed up the development/testing process. By default, this is set to true.
 
 ### 3. Declare the Vault Contract
 
@@ -70,9 +71,9 @@ Notes:
 3. From the output, look for the line containing "Class hash declared:"
 4. Copy the hash value that appears after this text
 5. Open your `.env` file again
-6. Paste the class hash as the value for `VAULT_HASH`. ❗❗❗ Remove any trailing 0s from the hash ❗❗❗
-  - ❌ Incorrect format: `0x051653f39500cfb021b791c3bf9f2b2f1e294a862c8824be21f3b44a0ee40449`
-  - ✅ Correct format: `0x51653f39500cfb021b791c3bf9f2b2f1e294a862c8824be21f3b44a0ee40449`
+6. Paste the class hash as the value for `VAULT_HASH`. ❗❗❗ Remove all leading 0s from the hash ❗❗❗
+  - ❌ Incorrect format: `0x0516...`
+  - ✅ Correct format: `0x516...`
 7. Save the file
 
 ### 4. Start Pitchlake
@@ -96,11 +97,11 @@ Notes:
 
 ### 5. Checking if the system works
 
-Integration scripts are running automatically when you start the system with a clean state. 
+Integration tests run automatically when you start the system with a clean state. 
 
-To see the test results, check the `test_integrations` container logs:
+To see the test results, check the `integration_tests` container logs:
 ```bash
-docker compose logs -f test_integrations
+docker compose logs -f integration_tests
 ```
 
 To see what the tests are doing check `round-transitions-test.sh`.
@@ -220,7 +221,7 @@ When you fetch the latest changes from the submodules (using `git submodule upda
 
 ### If transactions do not update the UI
 
-If you experience issues with transactions having no effect, it's possible that the wallet's nonce needs to be reset. To confirm this, you can check the Juno node's while sending a tx. An error log indicating a nonce mismatch should appear.
+If you experience issues with transactions having no effect, it's possible that the wallet's nonce needs to be reset. To confirm this, you can check the Juno node's logs while sending a transaction. An error log indicating a nonce mismatch should appear.
 To reset the nonce, you can do the following:
 1. Lock your Argent wallet
 2. Right-click on the Argent extension window and select "Inspect"
