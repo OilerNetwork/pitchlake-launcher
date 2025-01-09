@@ -3,6 +3,7 @@
 This is the main repository for running Pitchlake on your local computer. This guide will help you set up everything you need.
 
 For more information about Pitchlake, check out the links below
+
 [Pitchlake Crash Course](https://github.com/OilerNetwork/pitchlake_starknet/blob/main/documentation.md) | [Pitchlake Whitepaper](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4123018) | [Oiler Network](https://www.oiler.network/)
 
 ## What is this?
