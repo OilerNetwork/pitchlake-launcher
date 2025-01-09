@@ -1,11 +1,38 @@
 #!/bin/bash
 
+#######################################################
+# THIS SCRIPT IS SUPPOSED TO BE RUN BY DOCKER COMPOSE
+#######################################################
+
 # Ensure the script stops on the first error
 set -e
 
-export STARKNET_ACCOUNT=account.json
-export STARKNET_RPC=http://localhost:6060
-export STARKNET_PRIVATE_KEY=0x2bff1b26236b72d8a930be1dfbee09f79a536a49482a4c8b8f1030e2ab3bf1b
+# Check if integrations already ran or if account exists
+if [ -f "$STARKNET_ACCOUNT" ]; then
+    echo "================================================"
+    echo "Integration tests already ran this time."
+    echo "Reset the test environment to run again."
+    echo "================================================"
+    exit 0
+fi
+
+starkli account fetch --output ${STARKNET_ACCOUNT} ${STARKNET_ADDRESS}
+
+# Verify Starknet environment variables are set
+if [ -z "$STARKNET_ACCOUNT" ]; then
+    echo "ERROR: STARKNET_ACCOUNT environment variable is not set"
+    exit 1
+fi
+
+if [ -z "$STARKNET_RPC" ]; then
+    echo "ERROR: STARKNET_RPC environment variable is not set" 
+    exit 1
+fi
+
+if [ -z "$STARKNET_PRIVATE_KEY" ]; then
+    echo "ERROR: STARKNET_PRIVATE_KEY environment variable is not set"
+    exit 1
+fi
 
 # Load environment variables from .env file
 if [ -f .env ]; then
@@ -17,17 +44,17 @@ fi
 
 # Verify required environment variables
 if [ -z "$FOSSIL_API_KEY" ]; then
-    echo "ERROR: FOSSIL_API_KEY not set in .env file"
+    echo "ERROR: FOSSIL_API_KEY not set"
     exit 1
 fi
 
 if [ -z "$FOSSILCLIENT_ADDRESS" ]; then
-    echo "ERROR: FOSSILCLIENT_ADDRESS not set in .env file"
+    echo "ERROR: FOSSILCLIENT_ADDRESS not set"
     exit 1
 fi
 
 if [ -z "$VAULT_ADDRESS" ]; then
-    echo "ERROR: VAULT_ADDRESS not set in .env file"
+    echo "ERROR: VAULT_ADDRESS not set"
     exit 1
 fi
 
@@ -70,7 +97,7 @@ format_seconds() {
 }
 
 # Convert seconds to more readable format for each difference
-echo "\nTime until next transitions:"
+echo "Time until next transitions:"
 echo "Time until auction start: $(format_seconds $((AUCTION_START - NOW)))"
 echo "Time until auction end: $(format_seconds $((AUCTION_END - NOW)))"
 echo "Time until settlement: $(format_seconds $((SETTLEMENT - NOW)))"
@@ -81,30 +108,36 @@ TIME_UNTIL_SETTLEMENT=$((SETTLEMENT - NOW))
 
 # Check current state and run appropriate tests
 if [ "$ROUND_STATE" -eq 0 ] || [ "$NEW_ROUND_STATE" -eq 0 ]; then
+    echo ""
     echo "Round in OPEN state (0), running OPEN state tests..."
 
     # #==============================================
     # #test_start_auction_early_should_fail
     # #==============================================
-    # echo "\n[TEST] start_auction_early_should_fail"
-    # NOW=$(date +%s)
-    # echo "...attempting to start auction $((AUCTION_START - NOW)) seconds too early (should fail)"
+    echo ""
+    echo "[TEST] start_auction_early_should_fail"
+    NOW=$(date +%s)
+    echo "...attempting to start auction $((AUCTION_START - NOW)) seconds too early (should fail)"
 
-    # if starkli invoke $VAULT_ADDRESS start_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-    #     echo "[FAILED] Transaction succeeded but should have been rejected!"
-    #     exit 1
-    # else
-    #     echo "[PASSED] Transaction correctly rejected (auction start time not reached)"
-    # fi
+    if starkli invoke $VAULT_ADDRESS start_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
+        echo "[FAILED] Transaction succeeded but should have been rejected!"
+        exit 1
+    else
+        echo "[PASSED] Transaction correctly rejected (auction start time not reached)"
+    fi
 
     #==============================================
     #test_start_auction_on_time_should_succeed
     #==============================================
-
-    echo "\n[TEST] start_auction_on_time_should_succeed"
+    echo ""
+    echo "[TEST] start_auction_on_time_should_succeed"
     echo "...waiting for auction_start time to be reached..."
     NOW=$(date +%s)
-    sleep $((AUCTION_START - NOW + 1))
+    wait_time=$((AUCTION_START - NOW))
+    if [ $wait_time -gt 0 ]; then
+        echo "Waiting ${wait_time} seconds for auction to start..."
+        sleep $((wait_time + 1))    
+    fi
     echo "...transitioning round from OPEN (0) to AUCTIONING (1)..."
             
     # Call start_auction on the vault and wait for confirmation
@@ -123,29 +156,35 @@ if [ "$ROUND_STATE" -eq 0 ] || [ "$NEW_ROUND_STATE" -eq 0 ]; then
 fi
 
 if [ "$ROUND_STATE" -eq 1 ] || [ "$NEW_ROUND_STATE" -eq 1 ]; then
+    echo ""
     echo "Round in AUCTIONING state (1), running AUCTIONING state tests..."
     
     # #==============================================
     # #test_end_auction_early_should_fail
     # #==============================================
-    # echo "\n[TEST] end_auction_early_should_fail"
-    # NOW=$(date +%s)
-    # echo "...attempting to end auction $((AUCTION_END - NOW)) seconds too early (should fail)"
+    echo ""
+    echo "[TEST] end_auction_early_should_fail"
+    NOW=$(date +%s)
+    echo "...attempting to end auction $((AUCTION_END - NOW)) seconds too early (should fail)"
 
-    # if starkli invoke $VAULT_ADDRESS end_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-    #     echo "[FAILED] Transaction succeeded but should have been rejected!"
-    #     exit 1
-    # else
-    #     echo "[PASSED] Transaction correctly rejected (auction end time not reached)"
-    # fi
+    if starkli invoke $VAULT_ADDRESS end_auction --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
+        echo "[FAILED] Transaction succeeded but should have been rejected!"
+        exit 1
+    else
+        echo "[PASSED] Transaction correctly rejected (auction end time not reached)"
+    fi
 
     #==============================================
     #test_end_auction_on_time_should_succeed
     #==============================================
-    echo "\n[TEST] end_auction_on_time_should_succeed"
+    echo ""
+    echo "[TEST] end_auction_on_time_should_succeed"
     echo "...waiting for auction_end time to be reached..."
     NOW=$(date +%s)
-    sleep $((AUCTION_END - NOW + 1))
+    wait_time=$((AUCTION_END - NOW))
+    if [ $wait_time -gt 0 ]; then
+        sleep $((wait_time + 1))
+    fi
     echo "...transitioning round from AUCTIONING (1) to RUNNING (2)..."
             
     starkli invoke $VAULT_ADDRESS end_auction --account $STARKNET_ACCOUNT --watch
@@ -162,42 +201,46 @@ if [ "$ROUND_STATE" -eq 1 ] || [ "$NEW_ROUND_STATE" -eq 1 ]; then
 fi
 
 if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
+    echo ""
     echo "Round in RUNNING state (2), running RUNNING state tests..."
     
     # #==============================================
     # #test_settle_round_early_should_fail
     # #==============================================
-    # NOW=$(date +%s)
-    # echo "\n[TEST] settle_round_early_should_fail"
-    # echo "...attempting to settle round $((SETTLEMENT - NOW)) seconds too early (should fail)"
+    NOW=$(date +%s)
+    echo ""
+    echo "[TEST] settle_round_early_should_fail"
+    echo "...attempting to settle round $((SETTLEMENT - NOW)) seconds too early (should fail)"
 
-    # if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-    #     echo "[FAILED] Transaction succeeded but should have been rejected!"
-    #     exit 1
-    # else
-    #     echo "[PASSED] Transaction correctly rejected (settlement time not reached)"
-    # fi
+    if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
+        echo "[FAILED] Transaction succeeded but should have been rejected!"
+        exit 1
+    else
+        echo "[PASSED] Transaction correctly rejected (settlement time not reached)"
+    fi
 
     # #==============================================
     # #test_settle_round_without_pricing_data_should_fail
     # #==============================================
-    # echo "\n[TEST] settle_round_without_pricing_data_should_fail"
-    # echo "...waiting for settlement time to be reached..."
-    # NOW=$(date +%s)
-    # sleep $((SETTLEMENT - NOW + 1))
-    # echo "...testing settlement without pricing data rejection..."
+    echo ""
+    echo "[TEST] settle_round_without_pricing_data_should_fail"
+    echo "...waiting for settlement time to be reached..."
+    NOW=$(date +%s)
+    sleep $((SETTLEMENT - NOW + 1))
+    echo "...testing settlement without pricing data rejection..."
 
-    # if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
-    #     echo "[FAILED] Transaction succeeded but should have been rejected!"
-    #     exit 1
-    # else
-    #     echo "[PASSED] Transaction correctly rejected (pricing data not set)"
-    # fi
+    if starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch 2>/dev/null; then
+        echo "[FAILED] Transaction succeeded but should have been rejected!"
+        exit 1
+    else
+        echo "[PASSED] Transaction correctly rejected (pricing data not set)"
+    fi
 
     #==============================================
     #test_settle_round_should_succeed
     #==============================================
-    echo "\n[TEST] settle_round_should_succeed"
+    echo ""
+    echo "[TEST] settle_round_should_succeed"
     echo "...setting up settlement with Fossil..."
 
     # Get request to settle round
@@ -221,7 +264,7 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     ONE_MONTH_SECONDS=2592000
     ONE_WEEK_SECONDS=604800
 
-    FOSSIL_RESPONSE=$(curl -X POST "http://localhost:3000/pricing_data" \
+    FOSSIL_RESPONSE=$(curl -X POST "http://fossil_api:3000/pricing_data" \
         -H "Content-Type: application/json" \
         -H "x-api-key: $FOSSIL_API_KEY" \
         -d "{
@@ -245,7 +288,7 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
     # Poll Fossil status endpoint until request is fulfilled
     while true; do
         echo "Polling Fossil request status..."
-        STATUS_RESPONSE=$(curl -s "http://localhost:3000/job_status/$JOB_ID")
+        STATUS_RESPONSE=$(curl -s "http://fossil_api:3000/job_status/$JOB_ID")
         STATUS=$(echo $STATUS_RESPONSE | jq -r '.status')
         echo "Fossil status: $STATUS"
         
@@ -261,7 +304,7 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
         sleep 10
     done
 
-    echo "\nTransitioning round from RUNNING (2) to SETTLED (3)..."
+    echo "Transitioning round from RUNNING (2) to SETTLED (3)..."
 
     # Call settle_round on the vault and watch for confirmation
     OUTPUT=$(starkli invoke $VAULT_ADDRESS settle_round --account $STARKNET_ACCOUNT --watch)
@@ -287,12 +330,14 @@ if [ "$ROUND_STATE" -eq 2 ] || [ "$NEW_ROUND_STATE" -eq 2 ]; then
         echo "[FAILED] Failed to transition to SETTLED state"
         exit 1
     fi
+    echo ""
 fi
 
 if [ "$ROUND_STATE" -eq 3 ] || [ "$NEW_ROUND_STATE" -eq 3 ]; then
     echo "Round in SETTLED state (3), no transitions possible"
     echo "This round is settled. No further state transitions are possible."
-    exit 0
+    echo ""
+    echo "ALL TESTS PASSED"
 fi
 
-
+exit 0

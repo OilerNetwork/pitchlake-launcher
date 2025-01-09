@@ -13,17 +13,17 @@ fi
 
 # Verify required environment variables
 if [ -z "$FOSSIL_API_KEY" ]; then
-    echo "ERROR: FOSSIL_API_KEY not set in .env file"
+    echo "ERROR: FOSSIL_API_KEY not set"
     exit 1
 fi
 
 if [ -z "$FOSSILCLIENT_ADDRESS" ]; then
-    echo "ERROR: FOSSILCLIENT_ADDRESS not set in .env file"
+    echo "ERROR: FOSSILCLIENT_ADDRESS not set"
     exit 1
 fi
 
 if [ -z "$VAULT_ADDRESS" ]; then
-    echo "ERROR: VAULT_ADDRESS not set in .env file"
+    echo "ERROR: VAULT_ADDRESS not set"
     exit 1
 fi
 
@@ -56,7 +56,7 @@ echo "Vault address: $VAULT_ADDRESS"
 echo "Timestamp: $TIMESTAMP"
 echo "Identifier: $IDENTIFIER"
 
-FOSSIL_RESPONSE=$(curl -X POST "http://localhost:3000/pricing_data" \
+FOSSIL_RESPONSE=$(curl -X POST "http://fossil_api:3000/pricing_data" \
     -H "Content-Type: application/json" \
     -H "x-api-key: $FOSSIL_API_KEY" \
     -d "{
@@ -80,7 +80,7 @@ echo "Fossil job ID: $JOB_ID"
 # Poll Fossil status endpoint until request is fulfilled
 while true; do
     echo "Polling Fossil request status..."
-    STATUS_RESPONSE=$(curl -s "http://localhost:3000/job_status/$JOB_ID")
+    STATUS_RESPONSE=$(curl -s "http://fossil_api:3000/job_status/$JOB_ID")
     STATUS=$(echo $STATUS_RESPONSE | jq -r '.status')
     echo "Fossil status: $STATUS"
     

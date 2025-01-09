@@ -1,0 +1,37 @@
+# Use Ubuntu as the base image
+FROM ubuntu:22.04
+SHELL ["/bin/bash", "-c"]
+
+ARG STARKLI_VERSION
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    libssl-dev \
+    jq
+
+# Install Starkli
+ENV PATH="$PATH:/root/.starkli/bin"
+RUN curl -L https://github.com/xJonathanLEI/starkli/releases/download/v${STARKLI_VERSION}/starkli-x86_64-unknown-linux-gnu.tar.gz -o starkli.tar.gz && \
+    mkdir -p /root/.starkli/bin && \
+    tar -xvf starkli.tar.gz -C /root/.starkli/bin && \
+    rm starkli.tar.gz
+
+WORKDIR /tests
+
+# Copy test files
+COPY round-transitions-test.sh .
+COPY .env .
+
+CMD cd /env && \
+    export VAULT_ADDRESS=$(grep VAULT_ADDRESS deployment_addresses.env | cut -d"=" -f2) && \
+    export FOSSILCLIENT_ADDRESS=$(grep FOSSILCLIENT_ADDRESS deployment_addresses.env | cut -d"=" -f2) && \
+    cd /tests && \
+    env | grep VAULT_ADDRESS && \
+    env | grep FOSSILCLIENT_ADDRESS && \
+    env | grep STARKNET_ACCOUNT && \
+    env | grep STARKNET_ADDRESS && \
+    env | grep STARKNET_RPC && \
+    env | grep STARKNET_PRIVATE_KEY && \
+    chmod +x round-transitions-test.sh && \
+    ./round-transitions-test.sh
