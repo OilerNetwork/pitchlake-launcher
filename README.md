@@ -34,7 +34,7 @@ Before starting, please make sure you have the following installed on your compu
 1. Open your terminal (Command Prompt on Windows, Terminal on Mac/L)
 2. Run these commands one by one:
    ```bash
-   git clone https://github.com/PitchLake/pitchlake-launcher.git
+   git clone https://github.com/OilerNetwork/pitchlake-launcher
    cd pitchlake-launcher
    git submodule init
    git submodule update --remote
