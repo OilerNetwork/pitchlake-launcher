@@ -194,8 +194,15 @@ If you want to start fresh with a clean state:
 1. Stop all services (Ctrl+C in the terminal)
 2. Run `docker compose down -v` to remove all stored data
 3. Run `docker compose up` to start with a fresh state
+4. Reset the Argent wallet nonce
+  - When resetting the state, Juno will expect the account nonce to be 0, but Argent maintains the latest nonce in its cache. Therefore the Argent cache needs to be cleared.
+  - To confirm that there's a nonce mismatch, check Juno's logs while sending a tx. An error DEBUG log indicating a nonce mismatch should appear (`Invalid transaction nonce of contract at address`)
+  - To reset the nonce, follow these steps:
+    1. Right-click on the Argent extension window and select "Inspect"
+    2. Click on the "Console" tab
+    3. Type `chrome.storage.session.clear()` and press Enter
+    4. Unlock your wallet and try again
 
-Note: Reseting the state is likely to cause issues with the nonce of your wallet. Argent maintains the wallet nonce in the cache, while Juno will expect the nonce to be 0. To reset the nonce, check the troubleshooting section.
 
 ### Pitch Lake components have been updated
 When you fetch the latest changes from the submodules (using `git submodule update --remote`), you'll need to rebuild the docker images for the components that have been updated:
@@ -213,26 +220,6 @@ When you fetch the latest changes from the submodules (using `git submodule upda
    docker compose build --no-cache
    ```
 4. Start the services again with `docker compose up`
-
-## Troubleshooting
-
-### If transactions do not update the UI
-
-If you experience issues with transactions having no effect, it's possible that the wallet's nonce needs to be reset. To confirm this, you can check the Juno node's while sending a tx. An error DEBUG log indicating a nonce mismatch should appear (`Invalid transaction nonce of contract at address`)
-
-To fix this, you can reset the Argent wallet nonce and start the system with a clean state:
-1. Stop the docker containers by pressing Ctrl+C in the terminal
-2. Run `docker compose down -v` to clean up everything
-3. Run `docker compose up` to start fresh
-4. Right-click on the Argent extension window and select "Inspect"
-5. Click on the "Console" tab
-6. Type `chrome.storage.session.clear()` and press Enter
-7. Unlock your wallet and try again
-
-### If everything was working well and it not working as expected anymore:
-1. Stop everything by pressing Ctrl+C in the terminal
-2. Run `docker compose down -v` to clean up everything
-3. Run `docker compose up` to start fresh
 
 
 ## Need Help?
