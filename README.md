@@ -1,21 +1,21 @@
-# Pitchlake Launcher
+# Pitch Lake Launcher
 
-This is the main repository for running Pitchlake on your local computer. This guide will help you set up everything you need.
+This is the main repository for running Pitch Lake on your local computer. This guide will help you set up everything you need.
 
 For more information about Pitchlake, check out the links below
-[Pitchlake Crash Course](https://github.com/OilerNetwork/pitchlake_starknet/blob/main/documentation.md) | [Pitchlake Whitepaper](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4123018) | [Oiler Network](https://www.oiler.network/)
+[Pitch Lake Crash Course](https://github.com/OilerNetwork/pitchlake_starknet/blob/main/documentation.md) | [Pitch Lake Whitepaper](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4123018) | [Oiler Network](https://www.oiler.network/)
 
 ## What is this?
 
 This repository acts as a central hub that brings together all the different pieces of Pitchlake. It imports all the repositories and sets them up to work together on your computer.
 
 The main components that get set up are:
-- The Pitchlake frontend
+- The Pitch Lake frontend
 - The Fossil api - generates the pricing data and sets it in the smart contracts
 - The Juno node (with sequencer and the indexer plugins) - this acts as a local devnet, processing transactions, producing blocks and sending notifications about newly produced blocks. The indexer plugin is used to store the events in a postgres database.
-- A postgres database - used to store the Pitchlake contracts events
+- A postgres database - used to store the Pitch Lake contracts events
 - A websocket server - feeds the data from the db into the UI
-- Pitchlake contracts - Cairo contracts that are deployed to the Juno devnet
+- Pitch Lake contracts - Cairo contracts that are deployed to the Juno devnet
 
 All of these pieces are automatically configured to work together when you follow this guide.
 
@@ -24,7 +24,7 @@ All of these pieces are automatically configured to work together when you follo
 Before starting, please make sure you have the following installed on your computer:
 1. [Docker Desktop](https://www.docker.com/products/docker-desktop/) - the main tool we'll use to run everything
 2. [Git](https://git-scm.com/downloads) - needed to download the code
-3. [Argent Wallet](https://www.argent.xyz/) browser extension - the wallet we'll use to interact with Pitchlake from your browser
+3. [Argent Wallet](https://www.argent.xyz/) browser extension - the wallet we'll use to interact with Pitch Lake from your browser
 
 ## Step-by-Step Setup Guide
 
@@ -44,7 +44,7 @@ Before starting, please make sure you have the following installed on your compu
 1. In the pitchlake-launcher folder, find the file named `.env.example`
 2. Make a copy of this file and name it `.env`
 3. Open the `.env` file in a text editor (like Notepad on Windows/TextEdit on Mac)
-4. Fill in the values for `FOSSIL_API_KEY` and `FOSSIL_DATABASE_URL`. Reach out to the Fossil / Pitchlake team for these values.
+4. Fill in the values for `FOSSIL_API_KEY` and `FOSSIL_DATABASE_URL`. Reach out to the Fossil / Pitch Lake team for these values.
 5. Save the file
 
 Notes:
@@ -95,7 +95,7 @@ Notes:
 
 ### 5. Checking if the system works
 
-Integration scripts are running automatically when you start the system with a clean state. 
+Integration tests run automatically when you start the system with a clean state. 
 
 To see the test results, check the `test_integrations` container logs:
 ```bash
@@ -109,7 +109,7 @@ To see what the tests are doing check `round-transitions-test.sh`.
 By checking the logs of the individual services, you can tell if they are running and ready to use. 
 
 If not sure, you can also check the individual service like this:
-- The Pitchlake frontend will be available in your browser at: http://localhost:3003.  
+- The Pitch Lake frontend will be available in your browser at: http://localhost:3003.  
 - The Fossil API will be available at: http://localhost:3000. 
    - To check if the API is healthy, open a terminal and run:
      ```bash
@@ -148,21 +148,13 @@ If not sure, you can also check the individual service like this:
   - can only be checked looking at the logs of the db_server container
   - `docker compose logs -f websocket`
 
-### 6. Verify the System
+### 6. Using Pitchlake
 
-Once all services are running and healthy, you can run an integration test to verify that everything is working correctly.
-`round-transitions-test.sh` is a script that will perform the state transitions for the first round.
+Now that everything is set up and verified, you can start using Pitch Lake through the web interface.
 
-
-
-
-### 7. Using Pitchlake
-
-Now that everything is set up and verified, you can start using Pitchlake through the web interface.
-
-1. Access the Pitchlake UI:
+1. Access the Pitch Lake UI:
    - Open your browser and go to http://localhost:3003
-   - You should see the Pitchlake interface
+   - You should see the Pitch Lake interface
 
 2. Set up your wallet:
    1. Install the Argent wallet extension in your browser if you haven't already
@@ -172,11 +164,17 @@ Now that everything is set up and verified, you can start using Pitchlake throug
    5. Click on Manage Networks
    6. Click on Devnet (do not create a new network - importing accounts only works on the default devnet)
    7. Update the following fields with exactly these values:
-      - RPC URL: `http://localhost:6060`
       - Chain ID: `SN_JUNO_SEQUENCER`
+      - RPC URL: `http://localhost:6060`
       - Account classhash: `0x1a736d6ed154502257f02b1ccdf4d9d1089f80811cd6acad48e6b6a9d1f2003`
       - Fee Token: `0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7`
-   8. Import the following account into the wallet
+   8. From the main wallet screen:
+      - Click on your account name at the top
+      - Select the network dropdown
+      - Switch to "Devnet"
+      - Look for the "Add account" button at the bottom
+      - Click "Add account" to proceed with importing
+   9. Select the "Import from private key" option and add the following account into the wallet
       - Address: 0x406a8f52e741619b17410fc90774e4b36f968e1a71ae06baacfe1f55d987923
       - Private key: 0x3a4791edf67fa0b32b812e41bc8bc4e9b79915412b1331f7669cbe23e97e15a
 
@@ -198,7 +196,7 @@ If you want to start fresh with a clean state:
 
 Note: Reseting the state is likely to cause issues with the nonce of your wallet. Argent maintains the wallet nonce in the cache, while Juno will expect the nonce to be 0. To reset the nonce, check the troubleshooting section.
 
-### Pitchlake components have been updated
+### Pitch Lake components have been updated
 When you fetch the latest changes from the submodules (using `git submodule update --remote`), you'll need to rebuild the docker images for the components that have been updated:
 
 1. Stop all services if they're running (Ctrl+C in the terminal)
@@ -219,15 +217,18 @@ When you fetch the latest changes from the submodules (using `git submodule upda
 
 ### If transactions do not update the UI
 
-If you experience issues with transactions having no effect, it's possible that the wallet's nonce needs to be reset. To confirm this, you can check the Juno node's while sending a tx. An error log indicating a nonce mismatch should appear.
-To reset the nonce, you can do the following:
-1. Lock your Argent wallet
-2. Right-click on the Argent extension window and select "Inspect"
-3. Click on the "Console" tab
-4. Type `chrome.storage.session.clear()` and press Enter
-5. Unlock your wallet and try again
+If you experience issues with transactions having no effect, it's possible that the wallet's nonce needs to be reset. To confirm this, you can check the Juno node's while sending a tx. An error DEBUG log indicating a nonce mismatch should appear (`Invalid transaction nonce of contract at address`)
 
-### If things aren't working as expected:
+To fix this, you can do the following:
+1. Stop the docker containers by pressing Ctrl+C in the terminal
+2. Run `docker compose down -v` to clean up everything
+3. Run `docker compose up` to start fresh
+4. Right-click on the Argent extension window and select "Inspect"
+5. Click on the "Console" tab
+6. Type `chrome.storage.session.clear()` and press Enter
+7. Unlock your wallet and try again
+
+### If everything was working well and it not working as expected anymore:
 1. Stop everything by pressing Ctrl+C in the terminal
 2. Run `docker compose down -v` to clean up everything
 3. Run `docker compose up` to start fresh
@@ -235,7 +236,7 @@ To reset the nonce, you can do the following:
 
 ## Need Help?
 
-If you're having trouble with any of these steps, please reach out to the Pitchlake team for assistance.
+If you're having trouble with any of these steps, please reach out to the Pitch Lake team for assistance.
 
 
 
