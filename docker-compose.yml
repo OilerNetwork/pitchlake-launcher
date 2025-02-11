@@ -27,7 +27,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/pitchlake_data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pitchlake_user -d pitchlake_db -p 5433"]
+      test:
+        ["CMD-SHELL", "pg_isready -U pitchlake_user -d pitchlake_db -p 5433"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -50,15 +51,24 @@ services:
     ports:
       - "6060:6060"
     command: >
-      bash -c "./build/juno --plugin-path myplugin.so --http --http-port=6060 --http-host=0.0.0.0 
+      bash -c "./build/juno --plugin-path myplugin.so --http --http-port=6060 --http-host=0.0.0.0
       --db-path=../seq-db --log-level=trace --seq-enable --seq-block-time=1 --network sequencer
-      --seq-genesis-file genesis/genesis_prefund_accounts.json --seq-disable-fees 
+      --seq-genesis-file genesis/genesis_prefund_accounts.json --seq-disable-fees
       --rpc-call-max-steps=4123000 --rpc-cors-enable"
     healthcheck:
-      test: ["CMD", "curl", "-s", "-X", "POST", 
-            "-H", "Content-Type: application/json",
-            "--data", '{"jsonrpc":"2.0","method":"juno_version","params":[],"id":1}',
-            "http://localhost:6060"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-s",
+          "-X",
+          "POST",
+          "-H",
+          "Content-Type: application/json",
+          "--data",
+          '{"jsonrpc":"2.0","method":"juno_version","params":[],"id":1}',
+          "http://localhost:6060",
+        ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -93,8 +103,8 @@ services:
       context: ./pitchlake_db_server
       dockerfile: Dockerfile
     environment:
-     APP_URL: localhost:${FRONTEND_PORT}
-     DB_URL: postgres://pitchlake_user:pitchlake_password@pitchlake_db:5433/pitchlake_db
+      APP_URL: localhost:${FRONTEND_PORT}
+      DB_URL: postgres://pitchlake_user:pitchlake_password@pitchlake_db:5433/pitchlake_db
     ports:
       - "8080:8080"
     depends_on:
@@ -121,6 +131,9 @@ services:
       - NEXT_PUBLIC_WS_URL=http://localhost:8080
       - FOSSIL_API_KEY=${FOSSIL_API_KEY}
       - FOSSIL_DB_URL=${FOSSIL_DATABASE_URL}
+      - ALCHEMY_API_KEY=${ALCHEMY_API_KEY}
+      - DEMO_ACCOUNT_ADDRESS=${DEMO_ACCOUNT_ADDRESS}
+      - DEMO_PRIVATE_KEY=${DEMO_PRIVATE_KEY}
       - NEXT_PUBLIC_FOSSIL_API_URL=http://fossil_api:3000
     command: >
       /bin/sh -c '
@@ -137,3 +150,4 @@ services:
 volumes:
   postgres_data:
   shared:
+
