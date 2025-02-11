@@ -12,6 +12,8 @@ services:
       - STARKNET_ACCOUNT_ADDRESS=${FOSSIL_ADDRESS}
       - STARKNET_PRIVATE_KEY=${FOSSIL_PRIVATE_KEY}
       - ETH_RPC_URL=${ETH_MAINNET_RPC}
+      - USE_MOCK_PRICING_DATA=${FOSSIL_USE_MOCK_PRICING_DATA}
+      - NETWORK=${FOSSIL_NETWORK}
       - RUST_LOG=debug
 
   # Pitchlake
@@ -73,7 +75,7 @@ services:
       timeout: 10s
       retries: 5
 
-  contracts-deployment:
+  contracts_deployment:
     platform: linux/amd64
     build:
       context: ./pitchlake_starknet
@@ -85,7 +87,7 @@ services:
     environment:
       STARKNET_PRIVATE_KEY: ${PITCHLAKE_DEPLOYER_PRIVATE_KEY}
       STARKNET_RPC: http://juno_plugin:6060
-      SIGNER_ADDRESS: ${PITCHLAKE_DEPLOYER_ADDRESS}
+      DEPLOYER_ADDRESS: ${PITCHLAKE_DEPLOYER_ADDRESS}
       FOSSIL_PROCESSOR_ADDRESS: ${FOSSIL_ADDRESS}
       VAULT_ALPHA: ${VAULT_ALPHA}
       VAULT_STRIKE: ${VAULT_STRIKE}
@@ -108,7 +110,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      contracts-deployment:
+      contracts_deployment:
         condition: service_completed_successfully
 
   frontend:
@@ -135,6 +137,7 @@ services:
       - DEMO_ACCOUNT_ADDRESS=${DEMO_ACCOUNT_ADDRESS}
       - DEMO_PRIVATE_KEY=${DEMO_PRIVATE_KEY}
       - NEXT_PUBLIC_FOSSIL_API_URL=http://fossil_api:3000
+      - NEXT_PUBLIC_FOSSIL_USE_MOCK_PRICING_DATA=${FOSSIL_USE_MOCK_PRICING_DATA}
     command: >
       /bin/sh -c '
       cd /app/env &&
@@ -144,10 +147,30 @@ services:
       pnpm run build &&
       pnpm run start -p ${FRONTEND_PORT}'
     depends_on:
-      contracts-deployment:
+      contracts_deployment:
+        condition: service_completed_successfully
+
+  integration_tests:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.integration-tests
+      args:
+        STARKLI_VERSION: ${STARKLI_VERSION}
+    environment:
+        FOSSIL_API_KEY: ${FOSSIL_API_KEY}
+        STARKNET_ACCOUNT: /root/starkli_deployer_account.json
+        STARKNET_ADDRESS: ${PITCHLAKE_DEPLOYER_ADDRESS}
+        STARKNET_PRIVATE_KEY: ${PITCHLAKE_DEPLOYER_PRIVATE_KEY}
+        STARKNET_RPC: http://juno_plugin:6060
+    volumes:
+      - shared:/env
+      - tests:/tests
+    depends_on:
+      contracts_deployment:
         condition: service_completed_successfully
 
 volumes:
   postgres_data:
   shared:
-
+  tests:
